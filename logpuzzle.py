@@ -14,11 +14,14 @@ HTTP/1.0" 302 528 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US;
 rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6"
 """
 
+__author__ = "David Guzman with help from Peter Mayor and John"
+
 import os
 import re
 import sys
 import urllib.request
 import argparse
+import requests
 
 
 def read_urls(filename):
@@ -26,8 +29,16 @@ def read_urls(filename):
     extracting the hostname from the filename itself, sorting
     alphabetically in increasing order, and screening out duplicates.
     """
-    # +++your code here+++
-    pass
+    with open(filename) as f:
+        file_read = f.read()
+        file_regex = re.findall(r'.*GET\s*([^\s]*.jpg)', file_read)
+        file_regex.sort(key=lambda x: x[-8:])
+        no_duplicates = []
+        for line in file_regex:
+            # If the image is not in the no duplicates lists
+            if line not in no_duplicates:
+                no_duplicates.append(line)
+        return no_duplicates
 
 
 def download_images(img_urls, dest_dir):
@@ -38,8 +49,29 @@ def download_images(img_urls, dest_dir):
     to show each local image file.
     Creates the directory if necessary.
     """
-    # +++your code here+++
-    pass
+    if not os.path.isdir(dest_dir):  # Creates a test directory
+        os.mkdir(dest_dir)
+    else:
+        print(f"{dest_dir} is already a directory.")
+
+    # Downloads each image to the test directory
+    for idx, item in enumerate(img_urls):
+        res = requests.get(f'http://code.google.com{item}')
+
+        with open(f'{dest_dir}/img{idx}.jpg', 'wb') as f:
+            f.write(res.content)
+
+    with open(f'{dest_dir}/index.html', 'w') as f:
+        f.write("""
+        <html>
+        <body>
+        """)
+        for idx, item in enumerate(img_urls):
+            f.write(f'<img src="/{dest_dir}/img{idx}.jpg">')
+        f.write("""
+        </body>
+        </html>
+        """)
 
 
 def create_parser():
